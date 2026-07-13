@@ -36,16 +36,18 @@ def send_tg_message(status_icon, status_text, time_left="", server_url=None):
     else:
         masked_email = EMAIL[:2] + '****'
 
-    # 优先用传入的 server_url (含服务器 ID 的完整链接)
-    # 没有就用 BASE_URL (主域名)
-    display_url = server_url if server_url else BASE_URL
+    # 统一简洁格式 (参考 Godlike): ✓/✗ + key: value, 不要 emoji 装饰
+    simple_icon = "✓"
+    if "❌" in status_icon or "失败" in status_text:
+        simple_icon = "✗"
+    elif "⚠️" in status_icon or "未到" in status_text:
+        simple_icon = "!"
 
     text = (
-        f"🇫🇷 katabump 续期通知\n\n"
-        f"{status_icon} {status_text}\n"
-        f"👤 续期账户: {masked_email}\n"
-        f"⏱️ 续期时间: {current_time_str}\n"
-        f"🌐 {display_url}"
+        f"{simple_icon} {status_text}\n"
+        f"账号: {masked_email}\n"
+        f"时间: {current_time_str}\n"
+        f"Katabump Auto Renew"
     )
 
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
