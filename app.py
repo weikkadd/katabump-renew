@@ -17,7 +17,7 @@ TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN") or ""      # tg通知bot token(可
 BASE_URL = "https://dashboard.katabump.com"  # 网站链接
 
 #  Telegram 推送模块
-def send_tg_message(status_icon, status_text, time_left=""):
+def send_tg_message(status_icon, status_text, time_left="", server_url=None):
     if not TG_BOT_TOKEN or not TG_CHAT_ID:
         print("ℹ️ 未配置 TG_BOT_TOKEN 或 TG_CHAT_ID，跳过 Telegram 推送。")
         return
@@ -36,12 +36,16 @@ def send_tg_message(status_icon, status_text, time_left=""):
     else:
         masked_email = EMAIL[:2] + '****'
 
+    # 优先用传入的 server_url (含服务器 ID 的完整链接)
+    # 没有就用 BASE_URL (主域名)
+    display_url = server_url if server_url else BASE_URL
+
     text = (
         f"🇫🇷 katabump 续期通知\n\n"
         f"{status_icon} {status_text}\n"
         f"👤 续期账户: {masked_email}\n"
         f"⏱️ 续期时间: {current_time_str}\n"
-        f"🌐 {BASE_URL}"
+        f"🌐 {display_url}"
     )
 
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
@@ -882,15 +886,24 @@ def _check_renew_result(sb):
     if alert_text:
         print(f"📩 页面提示: {alert_text}")
         low = alert_text.lower()
+        # 获取当前服务器详情页 URL (含 ?id=xxx) 用于 TG 通知
+        try:
+            cur_url = sb.get_current_url()
+        except Exception:
+            cur_url = None
         if "can't renew" in low or "unable" in low:
-            send_tg_message("⏳", "未到续期时间", alert_text)
+            send_tg_message("⏳", "未到续期时间", alert_text, server_url=cur_url)
         elif any(kw in low for kw in ( "renewed", "success", "extended")):
-            send_tg_message("✅", "续期成功", alert_text)
+            send_tg_message("✅", "续期成功", alert_text, server_url=cur_url)
         else:
-            send_tg_message("ℹ️", "续期操作已执行", alert_text)
+            send_tg_message("ℹ️", "续期操作已执行", alert_text, server_url=cur_url)
     else:
         print("ℹ️ 未检测到明确的提示框，可能续期操作未生效")
-        send_tg_message("ℹ️", "续期操作已执行", "未检测到明确提示")
+        try:
+            cur_url = sb.get_current_url()
+        except Exception:
+            cur_url = None
+        send_tg_message("ℹ️", "续期操作已执行", "未检测到明确提示", server_url=cur_url)
 
 
 def renew_server(sb):
