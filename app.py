@@ -36,18 +36,11 @@ def send_tg_message(status_icon, status_text, time_left="", server_url=None):
     else:
         masked_email = EMAIL[:2] + '****'
 
-    # 统一简洁格式 (参考 Godlike): ✓/✗ + key: value, 不要 emoji 装饰
-    simple_icon = "✓"
-    if "❌" in status_icon or "失败" in status_text:
-        simple_icon = "✗"
-    elif "⚠️" in status_icon or "未到" in status_text:
-        simple_icon = "!"
-
     text = (
-        f"{simple_icon} {status_text}\n"
-        f"账号: {masked_email}\n"
-        f"时间: {current_time_str}\n"
-        f"Katabump Auto Renew"
+        f"🎮Katabump 续期通知\n"
+        f"⏰运行时间: {current_time_str}\n"
+        f"🖥️账号: {masked_email}\n"
+        f"📊续期结果: {'✅' if '成功' in status_text or '✅' in status_icon else '❌'}{status_text}"
     )
 
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
